@@ -29,7 +29,7 @@ fn main() -> Result<()> {
         let target = if is_stderr { &output.stderr } else { &output.stdout };
         let stdio = std::str::from_utf8(target)?;
         if is_stderr {
-            eprintln!("{}", stdio);
+            eprint!("{}", stdio);
         } else {
             println!("{}", stdio);
         }
