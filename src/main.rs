@@ -28,7 +28,11 @@ fn main() -> Result<()> {
     if output.status.success() {
         let target = if is_stderr { &output.stderr } else { &output.stdout };
         let stdio = std::str::from_utf8(target)?;
-        print!("{}", stdio);
+        if is_stderr {
+            eprint!("{}", stdio);
+        } else {
+            print!("{}", stdio);
+        }
     } else {
         std::process::exit(1);
     }
