@@ -34,7 +34,10 @@ fn main() -> Result<()> {
             print!("{}", stdio);
         }
     } else {
-        std::process::exit(1);
+        match output.status.code() {
+            Some(code) => std::process::exit(code),
+            None => println!("Process terminated by signal"),
+        }
     }
 
     Ok(())
