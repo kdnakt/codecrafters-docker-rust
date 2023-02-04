@@ -1,4 +1,6 @@
 use anyhow::{Context, Result};
+use std::ffi::CString;
+use libc::{chroot, c_char};
 
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
@@ -15,6 +17,19 @@ fn main() -> Result<()> {
         is_stderr = true;
     }
     // println!("is_stderr: {}", is_stderr);
+
+    // Filesystem isolation
+    unsafe {
+        // https://yoshitsugu.net/posts/2018-03-22-jailing-in-rust.html
+        chroot(CString::new("/sandbox".as_bytes())
+            .expect("Error in construct CString")
+            .as_bytes_with_nul()
+            .as_ptr() as *const c_char);
+    }
+    std::env::set_current_dir("/")?;
+    // Workaround: Command::output() expects /dev/null to be present.
+    std::fs::create_dir_all("/dev/null")?;
+
     let output = std::process::Command::new(command)
         .args(command_args)
         .output()
