@@ -38,21 +38,29 @@ fn main() -> Result<()> {
                 "Tried to run '{}' with arguments {:?}",
                 command, command_args
             )
-        })?;
-    
-    if output.status.success() {
-        let target = if is_stderr { &output.stderr } else { &output.stdout };
-        let stdio = std::str::from_utf8(target)?;
-        if is_stderr {
-            eprint!("{}", stdio);
-        } else {
-            print!("{}", stdio);
-        }
-    } else {
-        match output.status.code() {
-            Some(code) => std::process::exit(code),
-            None => println!("Process terminated by signal"),
-        }
+        });
+    match output {
+        Ok(out) => {
+            if out.status.success() {
+                let target = if is_stderr { &out.stderr } else { &out.stdout };
+                let stdio = std::str::from_utf8(target)?;
+                if is_stderr {
+                    eprint!("{}", stdio);
+                } else {
+                    print!("{}", stdio);
+                }
+            } else {
+                match out.status.code() {
+                    Some(code) => std::process::exit(code),
+                    None => println!("Process terminated by signal"),
+                }
+            }
+        },
+        Err(e) => {
+            std::process::exit(e.source().unwrap()
+                .downcast_ref::<std::io::Error>()
+                .unwrap().raw_os_error().unwrap());
+        },
     }
 
     Ok(())
