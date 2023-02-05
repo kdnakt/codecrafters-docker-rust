@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use std::ffi::CString;
-use libc::{chroot, c_char, WEXITSTATUS};
+use libc::{chroot, c_char};
 
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
@@ -53,7 +53,7 @@ fn main() -> Result<()> {
                     Some(code) => {
                         let stdout = std::str::from_utf8(&out.stdout)?;
                         print!("{}", stdout);
-                        std::process::exit(WEXITSTATUS(code));
+                        std::process::exit(code);
                     },
                     None => println!("Process terminated by signal"),
                 }
