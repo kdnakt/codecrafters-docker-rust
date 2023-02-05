@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use std::ffi::CString;
-use libc::{chroot, c_char};
+use libc::{chroot, c_char, WEXITSTATUS};
 
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
@@ -29,7 +29,6 @@ fn main() -> Result<()> {
     let _ignore = std::env::set_current_dir("/");
     // Workaround: Command::output() expects /dev/null to be present.
     let _ignore = std::fs::create_dir_all("/dev/null");
-
     let output = std::process::Command::new(command)
         .args(command_args)
         .output()
@@ -51,7 +50,11 @@ fn main() -> Result<()> {
                 }
             } else {
                 match out.status.code() {
-                    Some(code) => std::process::exit(code),
+                    Some(code) => {
+                        let stdout = std::str::from_utf8(&out.stdout)?;
+                        print!("{}", stdout);
+                        std::process::exit(WEXITSTATUS(code));
+                    },
                     None => println!("Process terminated by signal"),
                 }
             }
