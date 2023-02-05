@@ -26,9 +26,9 @@ fn main() -> Result<()> {
             .as_bytes_with_nul()
             .as_ptr() as *const c_char);
     }
-    std::env::set_current_dir("/")?;
+    let _ignore = std::env::set_current_dir("/");
     // Workaround: Command::output() expects /dev/null to be present.
-    std::fs::create_dir_all("/dev/null")?;
+    let _ignore = std::fs::create_dir_all("/dev/null");
 
     let output = std::process::Command::new(command)
         .args(command_args)
