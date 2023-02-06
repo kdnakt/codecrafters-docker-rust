@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use std::ffi::CString;
 use libc::{chroot, c_char};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // Usage: your_docker.sh run <image> <command> <arg1> <arg2> ...
 fn main() -> Result<()> {
@@ -19,9 +20,13 @@ fn main() -> Result<()> {
     // println!("is_stderr: {}", is_stderr);
 
     // Filesystem isolation
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .subsec_nanos();
     unsafe {
         // https://yoshitsugu.net/posts/2018-03-22-jailing-in-rust.html
-        chroot(CString::new("/sandbox".as_bytes())
+        chroot(CString::new(format!("/sandbox{}", nanos).as_bytes())
             .expect("Error in construct CString")
             .as_bytes_with_nul()
             .as_ptr() as *const c_char);
