@@ -18,15 +18,21 @@ fn main() -> Result<()> {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .subsec_nanos();
-    unsafe {
+    let dir = format!("/sandbox/{}", nanos);
+    std::fs::create_dir_all(&dir).expect("create_dir_all");
+    std::fs::copy(command, format!("{}/command", dir)).expect("copy");
+    let err = unsafe {
         // https://yoshitsugu.net/posts/2018-03-22-jailing-in-rust.html
-        chroot(CString::new(format!("/sandbox{}", nanos).as_bytes())
+        chroot(CString::new(dir.as_bytes())
             .expect("Error in construct CString")
             .as_bytes_with_nul()
-            .as_ptr() as *const c_char);
+            .as_ptr() as *const c_char)
+    };
+    if err == -1 {
+        panic!("chroot failed.");
     }
-    assert!(std::env::set_current_dir("/").is_ok());
-    let output = std::process::Command::new(command)
+    std::fs::create_dir_all("/dev/null").expect("create_dir_all");
+    let output = std::process::Command::new("/command")
         .args(command_args)
         .output()
         .with_context(|| {
