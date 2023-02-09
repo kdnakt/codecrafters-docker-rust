@@ -8,10 +8,6 @@ fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
     let command = &args[3];
     let command_args = &args[4..];
-    let mut is_stderr = false;
-    if command_args[0] == "echo_stderr" {
-        is_stderr = true;
-    }
 
     // Filesystem isolation
     let nanos = SystemTime::now()
@@ -44,13 +40,8 @@ fn main() -> Result<()> {
     match output {
         Ok(out) => {
             if out.status.success() {
-                let target = if is_stderr { &out.stderr } else { &out.stdout };
-                let stdio = std::str::from_utf8(target)?;
-                if is_stderr {
-                    eprint!("{}", stdio);
-                } else {
-                    print!("{}", stdio);
-                }
+                eprint!("{}", std::str::from_utf8(&out.stderr).unwrap());
+                print!("{}", std::str::from_utf8(&out.stdout).unwrap());
             } else {
                 match out.status.code() {
                     Some(code) => {
@@ -58,7 +49,7 @@ fn main() -> Result<()> {
                         print!("{}", stdout);
                         std::process::exit(code);
                     },
-                    None => println!("Process terminated by signal"),
+                    None => eprintln!("Process terminated by signal"),
                 }
             }
         },
